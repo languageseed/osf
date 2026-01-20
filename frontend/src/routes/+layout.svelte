@@ -1,7 +1,8 @@
 <script lang="ts">
 	import '../app.css';
 	import { Toaster } from 'svelte-sonner';
-	import { Menu, X } from 'lucide-svelte';
+	import { Menu, X, Wrench, Clock } from 'lucide-svelte';
+	import { MAINTENANCE_MODE, MAINTENANCE_MESSAGE } from '$lib/config';
 	
 	let { children } = $props();
 	
@@ -10,6 +11,41 @@
 
 <Toaster richColors position="top-right" />
 
+{#if MAINTENANCE_MODE}
+<!-- Maintenance Mode Screen -->
+<div class="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 flex items-center justify-center p-4">
+	<div class="max-w-lg w-full text-center">
+		<!-- Logo -->
+		<div class="mb-8">
+			<div class="w-20 h-20 bg-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-blue-500/30">
+				<span class="text-white font-bold text-3xl">OSF</span>
+			</div>
+			<h1 class="text-2xl font-bold text-white">Open Source Fund</h1>
+			<p class="text-blue-300 text-sm mt-1">Simulation Sandbox</p>
+		</div>
+		
+		<!-- Maintenance Card -->
+		<div class="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-8">
+			<div class="w-16 h-16 bg-amber-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
+				<Wrench class="w-8 h-8 text-amber-400" />
+			</div>
+			
+			<h2 class="text-xl font-semibold text-white mb-3">Under Maintenance</h2>
+			<p class="text-slate-300 mb-6">{MAINTENANCE_MESSAGE}</p>
+			
+			<div class="flex items-center justify-center gap-2 text-slate-400 text-sm">
+				<Clock class="w-4 h-4" />
+				<span>We'll be back shortly</span>
+			</div>
+		</div>
+		
+		<!-- Footer -->
+		<div class="mt-8 text-slate-500 text-xs">
+			<p>Gemini 3 Hackathon | Marathon Agent Track</p>
+		</div>
+	</div>
+</div>
+{:else}
 <div class="min-h-screen bg-white flex flex-col">
 	<!-- Hackathon + Simulation Banner -->
 	<div class="bg-gradient-to-r from-purple-900 to-indigo-900 text-white text-xs sm:text-sm text-center py-2 px-4">
@@ -142,3 +178,4 @@
 		</div>
 	</footer>
 </div>
+{/if}
