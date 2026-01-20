@@ -2,16 +2,15 @@
 	import '../app.css';
 	import { Toaster } from 'svelte-sonner';
 	import { Menu, X, Wrench, Clock } from 'lucide-svelte';
-	import { MAINTENANCE_MODE, MAINTENANCE_MESSAGE } from '$lib/config';
 	
-	let { children } = $props();
+	let { children, data } = $props();
 	
 	let showMobileMenu = $state(false);
 </script>
 
 <Toaster richColors position="top-right" />
 
-{#if MAINTENANCE_MODE}
+{#if data.maintenanceMode}
 <!-- Maintenance Mode Screen -->
 <div class="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 flex items-center justify-center p-4">
 	<div class="max-w-lg w-full text-center">
@@ -31,7 +30,7 @@
 			</div>
 			
 			<h2 class="text-xl font-semibold text-white mb-3">Under Maintenance</h2>
-			<p class="text-slate-300 mb-6">{MAINTENANCE_MESSAGE}</p>
+			<p class="text-slate-300 mb-6">{data.maintenanceMessage}</p>
 			
 			<div class="flex items-center justify-center gap-2 text-slate-400 text-sm">
 				<Clock class="w-4 h-4" />
