@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OSF Asset Viewer</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: system-ui, sans-serif; background: #1a1a2e; color: white; padding: 20px; }
+        h1 { margin-bottom: 20px; color: #4dabf7; }
+        h2 { margin: 30px 0 15px; color: #69db7c; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+        .card { background: #16213e; border-radius: 12px; overflow: hidden; }
+        .card img { width: 100%; height: 200px; object-fit: cover; }
+        .card-content { padding: 15px; }
+        .card-title { font-weight: bold; margin-bottom: 5px; }
+        .card-subtitle { font-size: 0.85em; color: #aaa; margin-bottom: 10px; }
+        .card-stats { display: flex; gap: 15px; font-size: 0.9em; color: #4dabf7; }
+        .avatar-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; }
+        .avatar { text-align: center; }
+        .avatar img { width: 120px; height: 120px; border-radius: 8px; object-fit: cover; }
+        .avatar-name { margin-top: 8px; font-size: 0.85em; }
+        .loading { color: #aaa; }
+        .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+        .tab { padding: 10px 20px; background: #16213e; border: none; color: white; border-radius: 8px; cursor: pointer; }
+        .tab.active { background: #4dabf7; }
+    </style>
+</head>
+<body>
+    <h1>OSF Asset Viewer</h1>
+    
+    <div class="tabs">
+        <button class="tab active" onclick="showSection('properties', this)">Properties</button>
+        <button class="tab" onclick="showSection('avatars', this)">Avatars</button>
+    </div>
+    
+    <div id="properties-section">
+        <h2>Generated Properties</h2>
+        <div id="properties" class="grid">
+            <p class="loading">Loading properties...</p>
+        </div>
+    </div>
+    
+    <div id="avatars-section" style="display:none;">
+        <h2>Participant Avatars</h2>
+        <div id="participant-avatars" class="avatar-grid">
+            <p class="loading">Loading avatars...</p>
+        </div>
+        
+        <h2>Service Provider Avatars</h2>
+        <div id="service-avatars" class="avatar-grid"></div>
+    </div>
+    
+    <script>
+        const API_BASE = 'http://localhost:8000/api/v1';
+        
+        function showSection(section, btn) {
+            document.getElementById('properties-section').style.display = section === 'properties' ? 'block' : 'none';
+            document.getElementById('avatars-section').style.display = section === 'avatars' ? 'block' : 'none';
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            btn.classList.add('active');
+        }
+        
+        async function loadProperties() {
+            try {
+                const res = await fetch(`${API_BASE}/pool/properties?limit=12`);
+                const properties = await res.json();
+                
+                const container = document.getElementById('properties');
+                container.innerHTML = '';
+                
+                for (const prop of properties) {
+                    // Get full property with images
+                    const fullRes = await fetch(`${API_BASE}/pool/properties/${prop.id}`);
+                    const full = await fullRes.json();
+                    
+                    const card = document.createElement('div');
+                    card.className = 'card';
+                    card.innerHTML = `
+                        <img src="${full.images?.isometric || 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect fill=%22%23333%22 width=%22100%22 height=%22100%22/></svg>'}" alt="${prop.address}">
+                        <div class="card-content">
+                            <div class="card-title">${full.listing?.headline || prop.address}</div>
+                            <div class="card-subtitle">${prop.address}, ${prop.suburb}</div>
+                            <div class="card-stats">
+                                <span>${prop.bedrooms} bed</span>
+                                <span>${prop.bathrooms} bath</span>
+                                <span>$${(prop.valuation/1000000).toFixed(2)}M</span>
+                            </div>
+                        </div>
+                    `;
+                    container.appendChild(card);
+                }
+            } catch (err) {
+                document.getElementById('properties').innerHTML = `<p>Error: ${err.message}</p>`;
+            }
+        }
+        
+        async function loadAvatars() {
+            try {
+                const res = await fetch(`${API_BASE}/pool/avatars`);
+                const avatars = await res.json();
+                
+                const participantContainer = document.getElementById('participant-avatars');
+                const serviceContainer = document.getElementById('service-avatars');
+                participantContainer.innerHTML = '';
+                serviceContainer.innerHTML = '';
+                
+                for (const [role, data] of Object.entries(avatars)) {
+                    const div = document.createElement('div');
+                    div.className = 'avatar';
+                    div.innerHTML = `
+                        <img src="${data.image}" alt="${role}">
+                        <div class="avatar-name">${role.replace(/_/g, ' ')}</div>
+                    `;
+                    
+                    if (data.category === 'participant') {
+                        participantContainer.appendChild(div);
+                    } else {
+                        serviceContainer.appendChild(div);
+                    }
+                }
+            } catch (err) {
+                document.getElementById('participant-avatars').innerHTML = `<p>Error: ${err.message}</p>`;
+            }
+        }
+        
+        loadProperties();
+        loadAvatars();
+    </script>
+</body>
+</html>

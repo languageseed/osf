@@ -1,0 +1,83 @@
+# OSPF Demo - Local Development Stack
+# Run: docker compose up --build
+# Backend: http://localhost:8000
+# Frontend: http://localhost:5173
+# PostgreSQL: localhost:5432
+# Redis: localhost:6379
+
+services:
+  # ============================================
+  # Backend (FastAPI) - Deploys to Railway
+  # ============================================
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend/src:/app/src
+      - ./backend/alembic:/app/alembic
+    environment:
+      - DATABASE_URL=postgresql://ospf:ospf_dev@postgres:5432/ospf_demo
+      - REDIS_URL=redis://redis:6379
+      - ENVIRONMENT=development
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    command: uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
+
+  # ============================================
+  # Frontend (SvelteKit) - Deploys to Vercel
+  # ============================================
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend/src:/app/src
+      - ./frontend/static:/app/static
+    environment:
+      - VITE_API_URL=http://localhost:8000
+    depends_on:
+      - backend
+
+  # ============================================
+  # PostgreSQL - Mock Blockchain/Ownership DB
+  # ============================================
+  postgres:
+    image: postgres:16-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=ospf
+      - POSTGRES_PASSWORD=ospf_dev
+      - POSTGRES_DB=ospf_demo
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ospf -d ospf_demo"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ============================================
+  # Redis - Sessions & Caching
+  # ============================================
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+volumes:
+  postgres_data:
+  redis_data:

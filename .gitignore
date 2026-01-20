@@ -1,0 +1,62 @@
+# Environment - NEVER commit these
+.env
+.env.*
+.env.local
+.env.*.local
+.env.production
+**/.env
+**/.env.*
+**/secrets.json
+**/credentials.json
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Node
+node_modules/
+.svelte-kit/
+build/
+dist/
+.vercel/
+
+# Docker
+*.log
+docker-compose.override.yml
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*.sublime-*
+
+# OS
+.DS_Store
+Thumbs.db
+.AppleDouble
+.LSOverride
+
+# Secrets
+*.pem
+*.key
+*.p12
+*.pfx
+credentials.json
+service-account.json
+
+# Testing
+coverage/
+.coverage
+htmlcov/
+
+# Build artifacts
+*.egg-info/
+*.egg
+*.db
